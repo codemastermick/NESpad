@@ -88,22 +88,27 @@ void Controller::readState(int pos)
 
 bool Controller::isPressed(int button)
 {
-    if (button == BTN_A)
+    switch (button)
+    {
+    case BTN_A:
         return _a;
-    if (button == BTN_B)
+    case BTN_B:
         return _b;
-    if (button == BTN_SELECT)
-        return _select;
-    if (button == BTN_START)
+    case BTN_START:
         return _start;
-    if (button == BTN_UP)
+    case BTN_SELECT:
+        return _select;
+    case BTN_UP:
         return _up;
-    if (button == BTN_DOWN)
+    case BTN_DOWN:
         return _down;
-    if (button == BTN_LEFT)
+    case BTN_LEFT:
         return _left;
-    if (button == BTN_RIGHT)
+    case BTN_RIGHT:
         return _right;
+    default:
+        return false;
+    }
 }
 
 bool Controller::hasInput()
