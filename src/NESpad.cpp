@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <NESpad.h>
 
+unsigned long debounceDelay = 108;  // length of time between readings, in microseconds
+unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
+
 Controller::Controller(int clockPin, int latchPin, int dataPin, int delayLength = 0)
 {
     pinMode(latchPin, OUTPUT);
@@ -12,7 +15,7 @@ Controller::Controller(int clockPin, int latchPin, int dataPin, int delayLength 
     _clockPin = clockPin;
     _dataPin = dataPin;
     _delayLength = delayLength;
-    _latched = false;
+    _registerBusy = false;
 }
 
 void Controller::latch()
@@ -20,7 +23,7 @@ void Controller::latch()
     digitalWrite(_latchPin, HIGH); // pulse the latch pin HIGH
     delayMicroseconds(12);         // wait the required 12 ms
     digitalWrite(_latchPin, LOW);  // drop the latch pin LOW again
-    _latched = true;               // set the latched flag to true to indicate we are reading the register
+    _registerBusy = true;          // set the latched flag to true to indicate we are reading the register
 
     _aState = _a;
     _a = false;
@@ -47,12 +50,7 @@ void Controller::latch()
         digitalWrite(_clockPin, LOW);
         delayMicroseconds(6);
     }
-
-    if (_delayLength > 0)
-    {
-        delay(_delayLength);
-    }
-    _latched = false;
+    _registerBusy = false;
 }
 
 void Controller::readState(int pos)
@@ -94,26 +92,52 @@ void Controller::readState(int pos)
     }
 }
 
+#pragma region Button States
 bool Controller::isPressed(int button)
 {
     switch (button)
     {
     case BTN_A:
-        return _a;
+        return !_aState && _a;
     case BTN_B:
-        return _b;
+        return !_bState && _b;
     case BTN_START:
-        return _start;
+        return !_startState && _start;
     case BTN_SELECT:
-        return _select;
+        return !_selectState && _select;
     case BTN_UP:
-        return _up;
+        return !_upState && _up;
     case BTN_DOWN:
-        return _down;
+        return !_downState && _down;
     case BTN_LEFT:
-        return _left;
+        return !_leftState && _left;
     case BTN_RIGHT:
-        return _right;
+        return !_rightState && _right;
+    default:
+        return false;
+    }
+}
+
+bool Controller::isHeld(int button)
+{
+    switch (button)
+    {
+    case BTN_A:
+        return _aState && _a;
+    case BTN_B:
+        return _bState && _b;
+    case BTN_START:
+        return _startState && _start;
+    case BTN_SELECT:
+        return _selectState && _select;
+    case BTN_UP:
+        return _upState && _up;
+    case BTN_DOWN:
+        return _downState && _down;
+    case BTN_LEFT:
+        return _leftState && _left;
+    case BTN_RIGHT:
+        return _rightState && _right;
     default:
         return false;
     }
@@ -124,25 +148,26 @@ bool Controller::wasReleased(int button)
     switch (button)
     {
     case BTN_A:
-        return _aState != _a;
+        return _aState && !_a;
     case BTN_B:
-        return _bState != _b;
+        return _bState && !_b;
     case BTN_START:
-        return _startState != _start;
+        return _startState && !_start;
     case BTN_SELECT:
-        return _selectState != _select;
+        return _selectState && !_select;
     case BTN_UP:
-        return _upState != _up;
+        return _upState && !_up;
     case BTN_DOWN:
-        return _downState != _down;
+        return _downState && !_down;
     case BTN_LEFT:
-        return _leftState != _left;
+        return _leftState && !_left;
     case BTN_RIGHT:
-        return _rightState != _right;
+        return _rightState && !_right;
     default:
         return false;
     }
 }
+#pragma endregion
 
 bool Controller::hasInput()
 {
@@ -151,12 +176,17 @@ bool Controller::hasInput()
 
 void Controller::update()
 {
-    if (!_latched)
+    if (!_registerBusy)
     {
         latch();
+        if (_delayLength > 0)
+        {
+            delay(_delayLength);
+        }
     }
 }
 
+#pragma region Convenience Methods
 void Controller::printInputTable()
 {
     if (hasInput())
@@ -181,3 +211,4 @@ void Controller::printInputTable()
         Serial.println("---------------");
     }
 }
+#pragma endregion
