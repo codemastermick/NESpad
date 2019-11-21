@@ -28,7 +28,7 @@ class Controller
 {
 public:
     Controller(int clock, int latch, int data, int delayLength = 0);
-    // NOTE: this will cause a 108 microsecond delay due to the NES controller specifications
+    // NOTE: this will cause a 108μs delay due to the NES controller specifications
     void update();
     // Returns true if the specified button is pressed
     bool isPressed(int button);
