@@ -24,22 +24,24 @@ void Controller::latch()
     delayMicroseconds(12);         // wait the required 12 ms
     digitalWrite(_latchPin, LOW);  // drop the latch pin LOW again
     _registerBusy = true;          // set the latched flag to true to indicate we are reading the register
+    rawData = 0xFF;
 
     _aState = _a;
-    _a = false;
     _bState = _b;
-    _b = false;
     _upState = _up;
-    _up = false;
     _downState = _down;
-    _down = false;
     _leftState = _left;
-    _left = false;
     _rightState = _right;
-    _right = false;
     _startState = _start;
-    _start = false;
     _selectState = _select;
+
+    _a = false;
+    _b = false;
+    _up = false;
+    _down = false;
+    _left = false;
+    _right = false;
+    _start = false;
     _select = false;
 
     for (int i = 0; i < 8; i++)
@@ -51,6 +53,39 @@ void Controller::latch()
         delayMicroseconds(6);
     }
     _registerBusy = false;
+
+    if (_a)
+    {
+        bitClear(rawData, BTN_A);
+    }
+    if (_b)
+    {
+        bitClear(rawData, BTN_B);
+    }
+    if (_up)
+    {
+        bitClear(rawData, BTN_UP);
+    }
+    if (_down)
+    {
+        bitClear(rawData, BTN_DOWN);
+    }
+    if (_left)
+    {
+        bitClear(rawData, BTN_LEFT);
+    }
+    if (_right)
+    {
+        bitClear(rawData, BTN_RIGHT);
+    }
+    if (_select)
+    {
+        bitClear(rawData, BTN_SELECT);
+    }
+    if (_start)
+    {
+        bitClear(rawData, BTN_START);
+    }
 }
 
 void Controller::readState(int pos)
@@ -92,7 +127,7 @@ void Controller::readState(int pos)
     }
 }
 
-#pragma region Button States
+// BEGIN Button States
 bool Controller::isPressed(int button)
 {
     switch (button)
@@ -167,7 +202,7 @@ bool Controller::wasReleased(int button)
         return false;
     }
 }
-#pragma endregion
+// END Button States
 
 bool Controller::hasInput()
 {
@@ -186,29 +221,52 @@ void Controller::update()
     }
 }
 
-#pragma region Convenience Methods
+// BEGIN Convenience Methods
 void Controller::printInputTable()
 {
-    if (hasInput())
+    byte currentBtn = 0;
+
+    Serial.println("---------------");
+    Serial.println("A|B|-|+|U|D|L|R");
+    for (byte i = 0; i < 8; i++)
     {
-        Serial.println("---------------");
-        Serial.println("A|B|-|+|U|D|L|R");
-        Serial.print(isPressed(BTN_A) ? 1 : 0);
-        Serial.print("|");
-        Serial.print(isPressed(BTN_B) ? 1 : 0);
-        Serial.print("|");
-        Serial.print(isPressed(BTN_SELECT) ? 1 : 0);
-        Serial.print("|");
-        Serial.print(isPressed(BTN_START) ? 1 : 0);
-        Serial.print("|");
-        Serial.print(isPressed(BTN_UP) ? 1 : 0);
-        Serial.print("|");
-        Serial.print(isPressed(BTN_DOWN) ? 1 : 0);
-        Serial.print("|");
-        Serial.print(isPressed(BTN_LEFT) ? 1 : 0);
-        Serial.print("|");
-        Serial.println(isPressed(BTN_RIGHT) ? 1 : 0);
-        Serial.println("---------------");
+        Serial.print(buttonStateAsChar(currentBtn));
+        if (i < 7)
+        {
+            Serial.print("|");
+        }
+        currentBtn++;
+    }
+    Serial.println();
+    Serial.println("---------------");
+}
+
+char Controller::buttonStateAsChar(int button)
+{
+    if (wasReleased(button))
+    { // Write 3 if released
+        return RELEASED;
+    }
+    else if (isHeld(button))
+    { // Write 2 if held
+        return HELD;
+    }
+    else if (isPressed(button))
+    { // Write 1 if pressed
+        return PRESSED;
+    }
+
+    if (!isPressed(button) && !isHeld(button) && !wasReleased(button))
+    { // Write 0 if not held
+        return NONE;
     }
 }
-#pragma endregion
+
+void Controller::printRawData()
+{
+    for (byte i = 0; i < 8; i++)
+    {
+        Serial.print(bitRead(rawData, i));
+    }
+}
+// END Convenience Methods
