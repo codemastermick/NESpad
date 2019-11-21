@@ -1,12 +1,16 @@
 #ifndef NESpad_h
 #define NESpad_h
 
+#define PRESSED 'P'
+#define HELD 'H'
+#define RELEASED 'R'
+#define NONE 'X'
+
 /* BEGIN BUTTON MAPPING
  * This is the order that the buttons enter the shift register
  * inside the NES controller. Also happens to be the bit positions
  * for a byte representation of all inputs
  */
-
 #define BTN_A 0
 #define BTN_B 1
 #define BTN_SELECT 2
@@ -28,7 +32,9 @@ class Controller
 {
 public:
     Controller(int clock, int latch, int data, int delayLength);
-    // NOTE: this will cause a 108μs delay due to the NES controller specifications
+    // This is a raw byte representation of the data send by the register
+    byte rawData;
+    // NOTE: this will cause a delay of 108 μs + delayLength ms due to the NES controller specifications
     void update();
     // Returns true if the specified button is pressed
     bool isPressed(int button);
@@ -40,6 +46,9 @@ public:
     bool hasInput();
     // Prints a table over Serial showing all button states
     void printInputTable();
+    // Returns the button state as a char
+    char buttonStateAsChar(int button);
+    void printRawData();
 
 private:
     void readState(int state);
