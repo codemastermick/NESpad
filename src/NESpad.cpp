@@ -22,13 +22,21 @@ void Controller::latch()
     digitalWrite(_latchPin, LOW);  // drop the latch pin LOW again
     _latched = true;               // set the latched flag to true to indicate we are reading the register
 
+    _aState = _a;
     _a = false;
+    _bState = _b;
     _b = false;
+    _upState = _up;
     _up = false;
+    _downState = _down;
     _down = false;
+    _leftState = _left;
     _left = false;
+    _rightState = _right;
     _right = false;
+    _startState = _start;
     _start = false;
+    _selectState = _select;
     _select = false;
 
     for (int i = 0; i < 8; i++)
@@ -106,6 +114,31 @@ bool Controller::isPressed(int button)
         return _left;
     case BTN_RIGHT:
         return _right;
+    default:
+        return false;
+    }
+}
+
+bool Controller::wasReleased(int button)
+{
+    switch (button)
+    {
+    case BTN_A:
+        return _aState != _a;
+    case BTN_B:
+        return _bState != _b;
+    case BTN_START:
+        return _startState != _start;
+    case BTN_SELECT:
+        return _selectState != _select;
+    case BTN_UP:
+        return _upState != _up;
+    case BTN_DOWN:
+        return _downState != _down;
+    case BTN_LEFT:
+        return _leftState != _left;
+    case BTN_RIGHT:
+        return _rightState != _right;
     default:
         return false;
     }

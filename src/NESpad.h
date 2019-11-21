@@ -32,6 +32,8 @@ public:
     void update();
     // Returns true if the specified button is pressed
     bool isPressed(int button);
+    // Returns true if the specified button was just released
+    bool wasReleased(int button);
     // Returns true if any button is pressed
     bool hasInput();
     // Prints a table over Serial showing all button states
